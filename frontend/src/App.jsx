@@ -86,8 +86,8 @@ const COMMODITY_PULSE_DATA = [
 function App() {
   const [activeTab, setActiveTab] = useState("home");
   const [activeNavSection, setActiveNavSection] = useState("home");
-  const [state, setState] = useState("Punjab");
-  const [commodity, setCommodity] = useState("Wheat");
+  const [state, setState] = useState("");
+  const [commodity, setCommodity] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [todayOnly, setTodayOnly] = useState(true);
 
@@ -218,11 +218,6 @@ function App() {
 
         const stateList = result.data || [];
         setStates(stateList);
-
-        if (stateList.length > 0) {
-          const initial = stateList.includes("Punjab") ? "Punjab" : stateList[0];
-          setState(initial);
-        }
       } catch (err) {
         console.error("States API Error:", err);
         setError("Unable to load states. Please refresh the page.");
@@ -235,7 +230,7 @@ function App() {
   }, []);
 
   // =====================================================
-  // 3. LOAD COMMODITIES WHEN STATE CHANGES & AUTO-LOAD
+  // 3. LOAD COMMODITIES WHEN STATE CHANGES
   // =====================================================
   useEffect(() => {
     if (!state) {
@@ -263,16 +258,9 @@ function App() {
         const commList = result.data || [];
         if (!isCancelled) {
           setCommodities(commList);
-
-          // Determine commodity to select
-          let selectedCrop = commodity;
-          if (!commList.includes(selectedCrop)) {
-            selectedCrop = commList.includes("Wheat") ? "Wheat" : (commList[0] || "");
-          }
-          setCommodity(selectedCrop);
-
-          if (selectedCrop) {
-            fetchMandiData(state, selectedCrop, selectedDate, false);
+          // If current commodity isn't in the new state's list, reset it
+          if (commodity && !commList.includes(commodity)) {
+            setCommodity("");
           }
         }
       } catch (err) {
