@@ -37,4 +37,23 @@ export class PricesController {
       next(error);
     }
   }
+
+  static async getTicker(req, res, next) {
+    try {
+      const limit = req.query.limit || 15;
+      const ticker = await PricesService.getTicker(limit);
+      return successResponse(res, ticker);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getPulse(req, res, next) {
+    try {
+      const pulse = await PricesService.getPulse();
+      return successResponse(res, pulse);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

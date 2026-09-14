@@ -86,28 +86,30 @@ const COMMODITY_PULSE_DATA = [
 function App() {
   const [activeTab, setActiveTab] = useState("home");
   const [activeNavSection, setActiveNavSection] = useState("home");
-  const [state, setState] = useState("");
-  const [commodity, setCommodity] = useState("");
+  const [state, setState] = useState("Punjab");
+  const [commodity, setCommodity] = useState("Wheat");
   const [selectedDate, setSelectedDate] = useState("");
+  const [todayOnly, setTodayOnly] = useState(true);
 
   const [states, setStates] = useState([]);
   const [commodities, setCommodities] = useState([]);
 
   const [results, setResults] = useState([]);
+  const [pulseData, setPulseData] = useState(COMMODITY_PULSE_DATA);
+  const [tickerData, setTickerData] = useState([]);
 
   const [loadingStates, setLoadingStates] = useState(true);
   const [loadingCommodities, setLoadingCommodities] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-
-
   // Interactive Arbitrage Calculator State
   const [calcCrop, setCalcCrop] = useState("wheat");
   const [calcVolume, setCalcVolume] = useState(50);
 
   const activeCalcCrop =
-    COMMODITY_PULSE_DATA.find((c) => c.id === calcCrop) ||
+    pulseData.find((c) => c.id === calcCrop) ||
+    pulseData[0] ||
     COMMODITY_PULSE_DATA[0];
 
   const calcLocalTotal = calcVolume * activeCalcCrop.localRate;
@@ -115,99 +117,63 @@ function App() {
   const calcGain = calcTopTotal - calcLocalTotal;
   const calcGainPercent = Math.round(
     ((activeCalcCrop.topRate - activeCalcCrop.localRate) /
-      activeCalcCrop.localRate) *
+      (activeCalcCrop.localRate || 1)) *
       100
   );
 
   // =====================================================
-  // LOAD STATES
+  // 1. LOAD LIVE TICKER & MARKET PULSE FEEDS
   // =====================================================
   useEffect(() => {
-    const loadStates = async () => {
+    const loadMarketFeeds = async () => {
       try {
-        setLoadingStates(true);
-        const response = await fetch(`${API_BASE_URL}/states`);
-        const result = await response.json();
-
-        if (!response.ok) {
-          throw new Error(result.message || "Failed to load states.");
+        const [tickerRes, pulseRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/v1/prices/ticker?limit=25`),
+          fetch(`${API_BASE_URL}/api/v1/prices/pulse`)
+        ]);
+        const [tickerJson, pulseJson] = await Promise.all([
+          tickerRes.json(),
+          pulseRes.json()
+        ]);
+        if (tickerJson.success && Array.isArray(tickerJson.data) && tickerJson.data.length > 0) {
+          setTickerData(tickerJson.data);
         }
-
-        setStates(result.data || []);
+        if (pulseJson.success && Array.isArray(pulseJson.data) && pulseJson.data.length > 0) {
+          setPulseData(pulseJson.data);
+        }
       } catch (err) {
-        console.error("States API Error:", err);
-        setError("Unable to load states. Please refresh the page.");
-      } finally {
-        setLoadingStates(false);
+        console.error("Market feeds load error:", err);
       }
     };
 
-    loadStates();
+    loadMarketFeeds();
   }, []);
 
   // =====================================================
-  // LOAD COMMODITIES WHEN STATE CHANGES
+  // REUSABLE MANDI DATA FETCHER
   // =====================================================
-  useEffect(() => {
-    if (!state) {
-      setCommodities([]);
-      setCommodity("");
-      return;
-    }
-
-    const loadCommodities = async () => {
-      try {
-        setLoadingCommodities(true);
-        setCommodity("");
-        setResults([]);
-        setError("");
-
-        const response = await fetch(
-          `${API_BASE_URL}/commodities?state=${encodeURIComponent(state)}`
-        );
-        const result = await response.json();
-
-        if (!response.ok) {
-          throw new Error(result.message || "Failed to load commodities.");
-        }
-
-        setCommodities(result.data || []);
-      } catch (err) {
-        console.error("Commodities API Error:", err);
-        setCommodities([]);
-        setError("Unable to load commodities for this state.");
-      } finally {
-        setLoadingCommodities(false);
-      }
-    };
-
-    loadCommodities();
-  }, [state]);
-
-  // =====================================================
-  // SEARCH MANDI DATA
-  // =====================================================
-  const handleSearch = async (e) => {
-    e.preventDefault();
-
-    if (!state || !commodity) {
+  const fetchMandiData = async (
+    targetState,
+    targetCommodity,
+    targetDate = selectedDate,
+    shouldScroll = false
+  ) => {
+    if (!targetState || !targetCommodity) {
       setError("Please select a state and commodity.");
-      setResults([]);
       return;
     }
 
     setLoading(true);
     setError("");
-    setResults([]);
 
     try {
       const response = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          state,
-          commodity,
-          date: selectedDate || undefined
+          state: targetState,
+          commodity: targetCommodity,
+          date: targetDate || undefined
         })
       });
 
@@ -217,12 +183,12 @@ function App() {
         throw new Error(result.message || "Failed to fetch data.");
       }
 
-      setResults(result.data || []);
+      const data = result.data || [];
+      setResults(data);
 
-      if (!result.data || result.data.length === 0) {
-        setError("No mandi data found for this search.");
-      } else {
-        // Smooth scroll to results
+      if (data.length === 0) {
+        setError(`No current market records found for ${targetCommodity} in ${targetState}. Try selecting another commodity.`);
+      } else if (shouldScroll) {
         setTimeout(() => {
           const el = document.getElementById("search-results-anchor");
           if (el) el.scrollIntoView({ behavior: "smooth" });
@@ -237,17 +203,126 @@ function App() {
   };
 
   // =====================================================
-  // VALID PRICE CALCULATIONS
+  // 2. LOAD STATES
   // =====================================================
-  const validMinPrices = results
+  useEffect(() => {
+    const loadStates = async () => {
+      try {
+        setLoadingStates(true);
+        const response = await fetch(`${API_BASE_URL}/states`);
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || "Failed to load states.");
+        }
+
+        const stateList = result.data || [];
+        setStates(stateList);
+
+        if (stateList.length > 0) {
+          const initial = stateList.includes("Punjab") ? "Punjab" : stateList[0];
+          setState(initial);
+        }
+      } catch (err) {
+        console.error("States API Error:", err);
+        setError("Unable to load states. Please refresh the page.");
+      } finally {
+        setLoadingStates(false);
+      }
+    };
+
+    loadStates();
+  }, []);
+
+  // =====================================================
+  // 3. LOAD COMMODITIES WHEN STATE CHANGES & AUTO-LOAD
+  // =====================================================
+  useEffect(() => {
+    if (!state) {
+      setCommodities([]);
+      setCommodity("");
+      return;
+    }
+
+    let isCancelled = false;
+
+    const loadCommodities = async () => {
+      try {
+        setLoadingCommodities(true);
+        setError("");
+
+        const response = await fetch(
+          `${API_BASE_URL}/commodities?state=${encodeURIComponent(state)}`
+        );
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || "Failed to load commodities.");
+        }
+
+        const commList = result.data || [];
+        if (!isCancelled) {
+          setCommodities(commList);
+
+          // Determine commodity to select
+          let selectedCrop = commodity;
+          if (!commList.includes(selectedCrop)) {
+            selectedCrop = commList.includes("Wheat") ? "Wheat" : (commList[0] || "");
+          }
+          setCommodity(selectedCrop);
+
+          if (selectedCrop) {
+            fetchMandiData(state, selectedCrop, selectedDate, false);
+          }
+        }
+      } catch (err) {
+        console.error("Commodities API Error:", err);
+        if (!isCancelled) {
+          setCommodities([]);
+          setError("Unable to load commodities for this state.");
+        }
+      } finally {
+        if (!isCancelled) {
+          setLoadingCommodities(false);
+        }
+      }
+    };
+
+    loadCommodities();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [state]);
+
+  // =====================================================
+  // SEARCH MANDI DATA (FORM SUBMIT)
+  // =====================================================
+  const handleSearch = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    fetchMandiData(state, commodity, selectedDate, true);
+  };
+
+  // =====================================================
+  // VALID PRICE CALCULATIONS & TODAY FILTER
+  // =====================================================
+  const latestArrivalDate =
+    results.length > 0 ? results[0]["Arrival Date"] : "14/09/2026";
+
+  const displayResults =
+    todayOnly && results.length > 0
+      ? results.filter((item) => item["Arrival Date"] === latestArrivalDate)
+      : results;
+
+  const validMinPrices = displayResults
     .map((item) => Number(item["Min Price"]))
     .filter((price) => Number.isFinite(price) && price >= 1);
 
-  const validModalPrices = results
+  const validModalPrices = displayResults
     .map((item) => Number(item["Modal Price"]))
     .filter((price) => Number.isFinite(price) && price >= 1);
 
-  const validMaxPrices = results
+  const validMaxPrices = displayResults
     .map((item) => Number(item["Max Price"]))
     .filter((price) => Number.isFinite(price) && price >= 1);
 
@@ -265,7 +340,7 @@ function App() {
   const highestPrice =
     validMaxPrices.length > 0 ? Math.max(...validMaxPrices) : "N/A";
 
-  const bestMandiRecord = results.reduce((best, cur) => {
+  const bestMandiRecord = displayResults.reduce((best, cur) => {
     const curModal = Number(cur["Modal Price"]) || 0;
     const bestModal = best ? Number(best["Modal Price"]) || 0 : 0;
     return curModal > bestModal ? cur : best;
@@ -284,7 +359,7 @@ function App() {
       ? ((profitAdvantage / averageModal) * 100).toFixed(1)
       : 0;
 
-  const lowestMandiRecord = results.reduce((lowest, cur) => {
+  const lowestMandiRecord = displayResults.reduce((lowest, cur) => {
     const curMin =
       Number(cur["Min Price"]) || Number(cur["Modal Price"]) || Infinity;
     const lowMin = lowest
@@ -492,7 +567,7 @@ function App() {
           apiBaseUrl={API_BASE_URL}
           states={states}
           defaultState={state || "Punjab"}
-          defaultCommodity={commodity || "Apple"}
+          defaultCommodity={commodity || "Wheat"}
           defaultMandi={
             bestMandiRecord
               ? bestMandiRecord.Market || bestMandiRecord.Mandi
@@ -502,6 +577,37 @@ function App() {
         />
       ) : (
         <>
+          {/* ================= REAL-TIME AGMARK LIVE TICKER ================= */}
+          {tickerData.length > 0 && (
+            <div className="figma-live-ticker-wrap">
+              <div className="ticker-label-chip">
+                <span className="live-pulsing-dot"></span>
+                <span className="ticker-badge-text">LIVE MARKET FEED</span>
+                <span className="ticker-badge-date">{tickerData[0]?.arrivalDate || "14/09/2026"}</span>
+              </div>
+              <div className="ticker-marquee-track">
+                <div className="ticker-marquee-content">
+                  {tickerData.concat(tickerData).map((item, idx) => (
+                    <span
+                      key={idx}
+                      className="ticker-quote-chip"
+                      onClick={() => {
+                        setState(item.state);
+                        setCommodity(item.commodity);
+                        fetchMandiData(item.state, item.commodity, "", true);
+                      }}
+                      title={`Click to view ${item.commodity} prices in ${item.state}`}
+                    >
+                      <strong className="quote-crop">{item.commodity}</strong>
+                      <span className="quote-mandi">({item.mandi}, {item.state}):</span>
+                      <span className="quote-price">₹{item.modalPrice.toLocaleString("en-IN")}<small>/Qtl</small></span>
+                      <span className="quote-dot">·</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
           {/* ================= HERO SECTION (MARKETING & ANALYTICS FOCUS) ================= */}
           <section className="figma-hero-section">
             <div className="hero-container">
@@ -661,23 +767,48 @@ function App() {
             <section className="results-section">
               <div className="results-header">
                 <div>
+                  <div className="current-data-tag-row">
+                    <span className="live-pulse-badge">🔴 LIVE MARKET FEED</span>
+                    <span className="current-date-badge">📅 {latestArrivalDate}</span>
+                  </div>
                   <p className="section-label">MARKET INTELLIGENCE RESULTS</p>
                   <h2>
                     {commodity} Commercial Prices in {state}
                   </h2>
                   <p className="result-count">
-                    {results.length} verified mandi market records found{" "}
-                    {selectedDate ? `for ${selectedDate}` : ""}
+                    {displayResults.length} verified mandi market records{" "}
+                    {todayOnly
+                      ? `for today (${latestArrivalDate})`
+                      : `across past 90 days`}
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  className="view-analytics-btn"
-                  onClick={() => setActiveTab("analytics")}
-                >
-                  📊 View Price Trends & Graphs →
-                </button>
+                <div className="results-header-actions">
+                  <div className="date-filter-toggle">
+                    <button
+                      type="button"
+                      className={`filter-toggle-btn ${todayOnly ? "active" : ""}`}
+                      onClick={() => setTodayOnly(true)}
+                    >
+                      ⚡ Today's Live Rates ({latestArrivalDate})
+                    </button>
+                    <button
+                      type="button"
+                      className={`filter-toggle-btn ${!todayOnly ? "active" : ""}`}
+                      onClick={() => setTodayOnly(false)}
+                    >
+                      📅 90-Day History ({results.length})
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="view-analytics-btn"
+                    onClick={() => setActiveTab("analytics")}
+                  >
+                    📊 View Price Trends & Graphs →
+                  </button>
+                </div>
               </div>
 
               {/* SUMMARY GRID */}
@@ -686,7 +817,7 @@ function App() {
                   <span>🏪</span>
                   <div>
                     <small>REPORTING MARKETS</small>
-                    <strong>{results.length}</strong>
+                    <strong>{displayResults.length}</strong>
                   </div>
                 </div>
 
@@ -840,7 +971,14 @@ function App() {
               {/* TABLE */}
               <div className="table-container">
                 <div className="table-header">
-                  <h3>APMC Market Price Details</h3>
+                  <div>
+                    <h3>APMC Market Price Details</h3>
+                    <span className="table-sub-badge">
+                      {todayOnly
+                        ? `Showing Today's Live Rates (${latestArrivalDate})`
+                        : `Showing All ${results.length} Historical Arrivals`}
+                    </span>
+                  </div>
                   <span>{state}</span>
                 </div>
 
@@ -859,7 +997,7 @@ function App() {
                       </tr>
                     </thead>
                     <tbody>
-                      {results.map((item, index) => (
+                      {displayResults.map((item, index) => (
                         <tr key={index}>
                           <td>{index + 1}</td>
                           <td className="mandi-name">
@@ -870,7 +1008,11 @@ function App() {
                           <td>₹{item["Min Price"]}</td>
                           <td className="modal-price">₹{item["Modal Price"]}</td>
                           <td>₹{item["Max Price"]}</td>
-                          <td>{item["Arrival Date"] || "N/A"}</td>
+                          <td className="arrival-date-cell">
+                            <span className={item["Arrival Date"] === latestArrivalDate ? "date-today-tag" : ""}>
+                              {item["Arrival Date"] || "N/A"}
+                            </span>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -1090,7 +1232,7 @@ function App() {
                     <div className="calc-field-group">
                       <label>Select Commodity / Crop:</label>
                       <div className="calc-commodity-chips">
-                        {COMMODITY_PULSE_DATA.map((crop) => (
+                        {pulseData.map((crop) => (
                           <button
                             key={crop.id}
                             type="button"
@@ -1178,8 +1320,9 @@ function App() {
                           className="calc-search-btn"
                           onClick={() => {
                             setState(activeCalcCrop.state);
-                            setCommodity(activeCalcCrop.name.split(" ")[0]);
-                            scrollToSearch();
+                            const cropName = activeCalcCrop.name.split(" ")[0];
+                            setCommodity(cropName);
+                            fetchMandiData(activeCalcCrop.state, cropName, "", true);
                           }}
                         >
                           🔍 Search Live {activeCalcCrop.name.split(" ")[0]} Rates
@@ -1200,11 +1343,11 @@ function App() {
               {/* COMMODITY MARKET PULSE GRID */}
               <div className="pulse-grid-header">
                 <h3>📈 Today's Commodity Market Pulse</h3>
-                <p>Real-time modal rates and price momentum from major agricultural trade hubs across India</p>
+                <p>Real-time modal rates and price momentum from major agricultural trade hubs across India (14/09/2026)</p>
               </div>
 
               <div className="commodity-pulse-grid">
-                {COMMODITY_PULSE_DATA.map((crop) => (
+                {pulseData.map((crop) => (
                   <div key={crop.id} className="pulse-card">
                     <div className="pulse-card-top">
                       <div className="crop-title-group">
@@ -1242,8 +1385,9 @@ function App() {
                         className="pulse-action-btn"
                         onClick={() => {
                           setState(crop.state);
-                          setCommodity(crop.name.split(" ")[0]);
-                          scrollToSearch();
+                          const cropName = crop.name.split(" ")[0];
+                          setCommodity(cropName);
+                          fetchMandiData(crop.state, cropName, "", true);
                         }}
                       >
                         Check Rates →

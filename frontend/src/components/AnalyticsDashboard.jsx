@@ -16,7 +16,7 @@ export default function AnalyticsDashboard({
 
   // Selection states
   const [selectedState, setSelectedState] = useState(defaultState || "Punjab");
-  const [selectedCommodity, setSelectedCommodity] = useState(defaultCommodity || "Apple");
+  const [selectedCommodity, setSelectedCommodity] = useState(defaultCommodity || "Wheat");
   const [selectedMandi, setSelectedMandi] = useState(defaultMandi || "");
 
   // Options lists

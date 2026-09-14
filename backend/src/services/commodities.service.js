@@ -29,25 +29,32 @@ export class CommoditiesService {
       return allNames;
     }
 
-    const prices = await prisma.marketPrice.findMany({
+    const grouped = await prisma.marketPrice.groupBy({
+      by: ["commodityId"],
       where: {
         mandi: {
           stateId: state.id
         }
       },
-      select: {
-        commodity: {
-          select: { name: true }
-        }
-      },
-      distinct: ["commodityId"]
+      _count: { id: true },
+      orderBy: { _count: { id: "desc" } }
     });
 
-    const stateCommodityNames = prices.map((p) => p.commodity.name).filter(Boolean);
+    const cIds = grouped.map((g) => g.commodityId);
+    const stateComms = await prisma.commodity.findMany({
+      where: { id: { in: cIds } },
+      select: { id: true, name: true }
+    });
+    const commMap = new Map(stateComms.map((c) => [c.id, c.name]));
+    const stateCommodityNames = cIds
+      .map((id) => commMap.get(id))
+      .filter(Boolean);
 
-    // Combine state-specific commodities first, then all other commodities so full variety is discoverable
-    const combined = Array.from(new Set([...stateCommodityNames, ...allNames]));
-    return combined.sort((a, b) => a.localeCompare(b));
+    const otherCommodities = allNames
+      .filter((name) => !stateCommodityNames.includes(name))
+      .sort((a, b) => a.localeCompare(b));
+
+    return [...stateCommodityNames, ...otherCommodities];
   }
 
   /**

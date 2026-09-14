@@ -10,6 +10,8 @@ import {
 
 const router = Router();
 
+router.get("/ticker", PricesController.getTicker);
+router.get("/pulse", PricesController.getPulse);
 router.get("/", validate(getPricesQuerySchema, "query"), PricesController.getAll);
 router.get("/analytics", validate(analyticsQuerySchema, "query"), PricesController.getAnalytics);
 router.get("/history", validate(historyPricesQuerySchema, "query"), PricesController.getHistory);
