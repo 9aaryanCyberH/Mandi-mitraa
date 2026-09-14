@@ -19,6 +19,7 @@ app.use(helmet());
 // CORS Configuration
 const allowedOrigins = [
   env.FRONTEND_URL,
+  "https://mandi-mitra.netlify.app",
   "http://localhost:5173",
   "http://localhost:5174",
   "http://localhost:3000",
@@ -31,7 +32,11 @@ app.use(
     origin: (origin, callback) => {
       // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === "development") {
+      if (
+        allowedOrigins.indexOf(origin) !== -1 ||
+        origin.endsWith(".netlify.app") ||
+        process.env.NODE_ENV === "development"
+      ) {
         return callback(null, true);
       }
       return callback(new Error(`CORS policy blocked access from origin: ${origin}`));
