@@ -310,7 +310,7 @@ function App() {
     results.length > 0 ? results[0]["Arrival Date"] : "14/09/2026";
 
   const displayResults =
-    todayOnly && results.length > 0
+    todayOnly && results.length > 0 && !selectedDate
       ? results.filter((item) => item["Arrival Date"] === latestArrivalDate)
       : results;
 
@@ -708,13 +708,25 @@ function App() {
                         <input
                           type="date"
                           value={selectedDate}
-                          onChange={(e) => setSelectedDate(e.target.value)}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setSelectedDate(val);
+                            if (state && commodity) {
+                              fetchMandiData(state, commodity, val, false);
+                            }
+                          }}
                         />
                         {selectedDate && (
                           <button
                             type="button"
                             className="clear-date-btn"
-                            onClick={() => setSelectedDate("")}
+                            title="Reset to today"
+                            onClick={() => {
+                              setSelectedDate("");
+                              if (state && commodity) {
+                                fetchMandiData(state, commodity, "", false);
+                              }
+                            }}
                           >
                             ✕
                           </button>
@@ -803,37 +815,86 @@ function App() {
               <div className="results-header">
                 <div>
                   <div className="current-data-tag-row">
-                    <span className="live-pulse-badge">🔴 LIVE MARKET FEED</span>
-                    <span className="current-date-badge">📅 {latestArrivalDate}</span>
+                    {selectedDate ? (
+                      <>
+                        <span className="selected-date-badge">📅 MARKET DATE: {latestArrivalDate}</span>
+                        <button
+                          type="button"
+                          className="switch-to-today-btn"
+                          onClick={() => {
+                            setSelectedDate("");
+                            if (state && commodity) {
+                              fetchMandiData(state, commodity, "", false);
+                            }
+                          }}
+                        >
+                          ⚡ Switch to Today's Live Rates
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="live-pulse-badge">🔴 LIVE MARKET FEED</span>
+                        <span className="current-date-badge">📅 {latestArrivalDate}</span>
+                      </>
+                    )}
                   </div>
-                  <p className="section-label">MARKET INTELLIGENCE RESULTS</p>
+                  <p className="section-label">
+                    {selectedDate ? "ARCHIVED MARKET INTELLIGENCE" : "MARKET INTELLIGENCE RESULTS"}
+                  </p>
                   <h2>
                     {commodity} Commercial Prices in {state}
                   </h2>
                   <p className="result-count">
                     {displayResults.length} verified mandi market records{" "}
-                    {todayOnly
+                    {selectedDate
+                      ? `for ${latestArrivalDate}`
+                      : todayOnly
                       ? `for today (${latestArrivalDate})`
-                      : `across past 90 days`}
+                      : `across past 1 year`}
                   </p>
                 </div>
 
                 <div className="results-header-actions">
                   <div className="date-filter-toggle">
-                    <button
-                      type="button"
-                      className={`filter-toggle-btn ${todayOnly ? "active" : ""}`}
-                      onClick={() => setTodayOnly(true)}
-                    >
-                      ⚡ Today's Live Rates ({latestArrivalDate})
-                    </button>
-                    <button
-                      type="button"
-                      className={`filter-toggle-btn ${!todayOnly ? "active" : ""}`}
-                      onClick={() => setTodayOnly(false)}
-                    >
-                      📅 90-Day History ({results.length})
-                    </button>
+                    {selectedDate ? (
+                      <>
+                        <button
+                          type="button"
+                          className="filter-toggle-btn active"
+                        >
+                          📅 Date: {latestArrivalDate} ({displayResults.length} mandis)
+                        </button>
+                        <button
+                          type="button"
+                          className="filter-toggle-btn"
+                          onClick={() => {
+                            setSelectedDate("");
+                            if (state && commodity) {
+                              fetchMandiData(state, commodity, "", false);
+                            }
+                          }}
+                        >
+                          ⚡ Today's Live Rates
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          className={`filter-toggle-btn ${todayOnly ? "active" : ""}`}
+                          onClick={() => setTodayOnly(true)}
+                        >
+                          ⚡ Today's Live Rates ({latestArrivalDate})
+                        </button>
+                        <button
+                          type="button"
+                          className={`filter-toggle-btn ${!todayOnly ? "active" : ""}`}
+                          onClick={() => setTodayOnly(false)}
+                        >
+                          📅 1-Year History ({results.length})
+                        </button>
+                      </>
+                    )}
                   </div>
 
                   <button

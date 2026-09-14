@@ -40,10 +40,21 @@ export class PricesService {
     }
 
     if (parsedDate) {
-      const nextDay = new Date(parsedDate.getTime() + 24 * 60 * 60 * 1000);
+      const startOfDay = new Date(Date.UTC(
+        parsedDate.getUTCFullYear(),
+        parsedDate.getUTCMonth(),
+        parsedDate.getUTCDate(),
+        0, 0, 0, 0
+      ));
+      const endOfDay = new Date(Date.UTC(
+        parsedDate.getUTCFullYear(),
+        parsedDate.getUTCMonth(),
+        parsedDate.getUTCDate(),
+        23, 59, 59, 999
+      ));
       whereClause.arrivalDate = {
-        gte: parsedDate,
-        lt: nextDay
+        gte: startOfDay,
+        lte: endOfDay
       };
     }
 
