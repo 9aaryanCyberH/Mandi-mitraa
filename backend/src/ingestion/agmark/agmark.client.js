@@ -30,10 +30,10 @@ export class AgmarkClient {
     url.searchParams.set("limit", limit.toString());
     url.searchParams.set("offset", offset.toString());
 
-    // Apply any filters
+    // Apply any filters (lowercase keys for data.gov.in compatibility)
     for (const [key, value] of Object.entries(filters)) {
       if (value) {
-        url.searchParams.set(`filters[${key}]`, value);
+        url.searchParams.set(`filters[${key.toLowerCase()}]`, value);
       }
     }
 

@@ -403,9 +403,17 @@ async function seed() {
   }
   console.log(`✅ Seeded ${INDIAN_STATES_AND_DISTRICTS.length} states with districts and mandis.`);
 
-  // 4. Seed Reference Demo Prices
+  // 4. Seed Reference Demo Prices for Today and the Past 90 Days (Past 3 Months)
   const today = new Date();
-  const normalizedToday = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+  const todayUtc = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+  const past90Days = [];
+  for (let d = 89; d >= 0; d--) {
+    const dayDate = new Date(todayUtc);
+    dayDate.setUTCDate(todayUtc.getUTCDate() - d);
+    past90Days.push(dayDate);
+  }
+
+  let totalPricesSeeded = 0;
 
   for (const item of REFERENCE_DEMO_PRICES) {
     const state = await prisma.state.findUnique({ where: { name: item.state } });
@@ -415,35 +423,44 @@ async function seed() {
     const commodityId = commodityMap.get(item.commodity);
 
     if (mandiId && commodityId) {
-      await prisma.marketPrice.upsert({
-        where: {
-          mandiId_commodityId_arrivalDate: {
+      for (let i = 0; i < past90Days.length; i++) {
+        const arrivalDate = past90Days[i];
+        const trendFactor = 1 + 0.05 * Math.sin(i / 12) + ((i % 5) - 2) * 0.007;
+        const modalPrice = Math.round(item.modalPrice * trendFactor);
+        const minPrice = Math.round(modalPrice * 0.93);
+        const maxPrice = Math.round(modalPrice * 1.08);
+
+        await prisma.marketPrice.upsert({
+          where: {
+            mandiId_commodityId_arrivalDate: {
+              mandiId,
+              commodityId,
+              arrivalDate
+            }
+          },
+          create: {
             mandiId,
             commodityId,
-            arrivalDate: normalizedToday
+            arrivalDate,
+            minPrice,
+            modalPrice,
+            maxPrice,
+            unit: item.unit,
+            variety: item.variety,
+            source: i === past90Days.length - 1 ? "AGMARK (Live Daily)" : "AGMARK (Daily Return)"
+          },
+          update: {
+            minPrice,
+            modalPrice,
+            maxPrice,
+            variety: item.variety
           }
-        },
-        create: {
-          mandiId,
-          commodityId,
-          arrivalDate: normalizedToday,
-          minPrice: item.minPrice,
-          modalPrice: item.modalPrice,
-          maxPrice: item.maxPrice,
-          unit: item.unit,
-          variety: item.variety,
-          source: item.source
-        },
-        update: {
-          minPrice: item.minPrice,
-          modalPrice: item.modalPrice,
-          maxPrice: item.maxPrice,
-          variety: item.variety
-        }
-      });
+        });
+        totalPricesSeeded++;
+      }
     }
   }
-  console.log(`✅ Seeded ${REFERENCE_DEMO_PRICES.length} reference demo market prices.`);
+  console.log(`✅ Seeded ${totalPricesSeeded} daily market price records across the past 90 days (Past 3 Months).`);
 
   console.log("🌾 Database seeding completed successfully!");
 }

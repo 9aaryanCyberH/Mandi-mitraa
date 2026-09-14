@@ -12,7 +12,7 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default("7d"),
   SCRAPER_CRON: z.string().default("0 */6 * * *"),
   AGMARK_BASE_URL: z.string().default("https://api.data.gov.in/resource"),
-  AGMARK_RESOURCE_ID: z.string().default("35985678-0d79-46b4-9ed6-6f13308a1d24"),
+  AGMARK_RESOURCE_ID: z.string().default("9ef84268-d588-465a-a308-a864a43d0070"),
   AGMARK_API_KEY: z.string().optional().default("")
 });
 
