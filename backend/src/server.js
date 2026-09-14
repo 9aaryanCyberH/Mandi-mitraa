@@ -15,6 +15,30 @@ async function startServer() {
       logger.warn("⚠️ Warning: PostgreSQL database is not currently reachable. The server will start, but database operations may fail until connected.");
     } else {
       logger.info("✅ PostgreSQL database connected successfully.");
+
+      // Ensure database schema and initial data are fully initialized
+      try {
+        const stateCount = await prisma.state.count();
+        if (stateCount === 0) {
+          logger.info("States table is empty. Running initial database seed...");
+          const { seed } = await import("../scripts/seed.js");
+          await seed();
+          logger.info("✅ Database seeded successfully.");
+        } else {
+          logger.info(`✅ Database verified: ${stateCount} states registered.`);
+        }
+      } catch (tableErr) {
+        logger.warn(`⚠️ Application tables missing or uninitialized (${tableErr.message}). Synchronizing schema via Prisma...`);
+        try {
+          const { execSync } = await import("child_process");
+          execSync("npx prisma db push --accept-data-loss", { stdio: "inherit" });
+          const { seed } = await import("../scripts/seed.js");
+          await seed();
+          logger.info("✅ Database schema synchronized and seeded successfully.");
+        } catch (syncErr) {
+          logger.error("❌ Database schema push or seeding failed:", syncErr);
+        }
+      }
     }
 
     // Start background scheduled updates

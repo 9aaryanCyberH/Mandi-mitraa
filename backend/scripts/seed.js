@@ -320,7 +320,7 @@ const REFERENCE_DEMO_PRICES = [
   }
 ];
 
-async function seed() {
+export async function seed() {
   console.log("🌱 Starting Mandi-Mitra database seeding...");
 
   // 1. Seed Admin User
@@ -404,41 +404,34 @@ async function seed() {
   console.log(`✅ Seeded ${INDIAN_STATES_AND_DISTRICTS.length} states with districts and mandis.`);
 
   // 4. Seed Reference Demo Prices for Today and the Past 90 Days (Past 3 Months)
-  const today = new Date();
-  const todayUtc = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
-  const past90Days = [];
-  for (let d = 89; d >= 0; d--) {
-    const dayDate = new Date(todayUtc);
-    dayDate.setUTCDate(todayUtc.getUTCDate() - d);
-    past90Days.push(dayDate);
-  }
+  const existingPriceCount = await prisma.marketPrice.count();
+  if (existingPriceCount === 0) {
+    const today = new Date();
+    const todayUtc = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+    const past90Days = [];
+    for (let d = 89; d >= 0; d--) {
+      const dayDate = new Date(todayUtc);
+      dayDate.setUTCDate(todayUtc.getUTCDate() - d);
+      past90Days.push(dayDate);
+    }
 
-  let totalPricesSeeded = 0;
+    const priceRecords = [];
+    for (const item of REFERENCE_DEMO_PRICES) {
+      const state = await prisma.state.findUnique({ where: { name: item.state } });
+      if (!state) continue;
 
-  for (const item of REFERENCE_DEMO_PRICES) {
-    const state = await prisma.state.findUnique({ where: { name: item.state } });
-    if (!state) continue;
+      const mandiId = mandiMap.get(`${item.mandi}_${state.id}`);
+      const commodityId = commodityMap.get(item.commodity);
 
-    const mandiId = mandiMap.get(`${item.mandi}_${state.id}`);
-    const commodityId = commodityMap.get(item.commodity);
+      if (mandiId && commodityId) {
+        for (let i = 0; i < past90Days.length; i++) {
+          const arrivalDate = past90Days[i];
+          const trendFactor = 1 + 0.05 * Math.sin(i / 12) + ((i % 5) - 2) * 0.007;
+          const modalPrice = Math.round(item.modalPrice * trendFactor);
+          const minPrice = Math.round(modalPrice * 0.93);
+          const maxPrice = Math.round(modalPrice * 1.08);
 
-    if (mandiId && commodityId) {
-      for (let i = 0; i < past90Days.length; i++) {
-        const arrivalDate = past90Days[i];
-        const trendFactor = 1 + 0.05 * Math.sin(i / 12) + ((i % 5) - 2) * 0.007;
-        const modalPrice = Math.round(item.modalPrice * trendFactor);
-        const minPrice = Math.round(modalPrice * 0.93);
-        const maxPrice = Math.round(modalPrice * 1.08);
-
-        await prisma.marketPrice.upsert({
-          where: {
-            mandiId_commodityId_arrivalDate: {
-              mandiId,
-              commodityId,
-              arrivalDate
-            }
-          },
-          create: {
+          priceRecords.push({
             mandiId,
             commodityId,
             arrivalDate,
@@ -448,28 +441,32 @@ async function seed() {
             unit: item.unit,
             variety: item.variety,
             source: i === past90Days.length - 1 ? "AGMARK (Live Daily)" : "AGMARK (Daily Return)"
-          },
-          update: {
-            minPrice,
-            modalPrice,
-            maxPrice,
-            variety: item.variety
-          }
-        });
-        totalPricesSeeded++;
+          });
+        }
       }
     }
+
+    if (priceRecords.length > 0) {
+      await prisma.marketPrice.createMany({
+        data: priceRecords,
+        skipDuplicates: true
+      });
+      console.log(`✅ Seeded ${priceRecords.length} daily market price records across the past 90 days (Past 3 Months).`);
+    }
+  } else {
+    console.log(`ℹ️ Market prices already seeded (${existingPriceCount} records exist). Skipping price seeding.`);
   }
-  console.log(`✅ Seeded ${totalPricesSeeded} daily market price records across the past 90 days (Past 3 Months).`);
 
   console.log("🌾 Database seeding completed successfully!");
 }
 
-seed()
-  .catch((e) => {
-    console.error("❌ Seeding failed:", e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+if (process.argv[1] && (process.argv[1].endsWith("seed.js") || process.argv[1].includes("seed"))) {
+  seed()
+    .catch((e) => {
+      console.error("❌ Seeding failed:", e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}

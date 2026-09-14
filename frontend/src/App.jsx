@@ -129,7 +129,9 @@ function App() {
   // 1. LOAD LIVE TICKER & MARKET PULSE FEEDS
   // =====================================================
   useEffect(() => {
-    const loadMarketFeeds = async () => {
+    let isSubscribed = true;
+
+    const loadMarketFeeds = async (attempt = 1) => {
       try {
         const [tickerRes, pulseRes] = await Promise.all([
           fetch(`${API_BASE_URL}/api/v1/prices/ticker?limit=25`),
@@ -139,18 +141,29 @@ function App() {
           tickerRes.json(),
           pulseRes.json()
         ]);
+        if (!isSubscribed) return;
+
         if (tickerJson.success && Array.isArray(tickerJson.data) && tickerJson.data.length > 0) {
           setTickerData(tickerJson.data);
+        } else if (attempt < 3 && isSubscribed) {
+          setTimeout(() => loadMarketFeeds(attempt + 1), 3000);
         }
+
         if (pulseJson.success && Array.isArray(pulseJson.data) && pulseJson.data.length > 0) {
           setPulseData(pulseJson.data);
         }
       } catch (err) {
-        console.error("Market feeds load error:", err);
+        console.error(`Market feeds load error (attempt ${attempt}):`, err);
+        if (attempt < 3 && isSubscribed) {
+          setTimeout(() => loadMarketFeeds(attempt + 1), 3000);
+        }
       }
     };
 
     loadMarketFeeds();
+    return () => {
+      isSubscribed = false;
+    };
   }, []);
 
   // =====================================================
@@ -200,7 +213,7 @@ function App() {
       }
     } catch (err) {
       console.error("API Error:", err);
-      setError("Unable to fetch mandi data. Please try again.");
+      setError(err.message || "Unable to fetch mandi data. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -210,7 +223,9 @@ function App() {
   // 2. LOAD STATES
   // =====================================================
   useEffect(() => {
-    const loadStates = async () => {
+    let isSubscribed = true;
+
+    const loadStates = async (attempt = 1) => {
       try {
         setLoadingStates(true);
         const response = await fetch(`${API_BASE_URL}/states`);
@@ -221,16 +236,39 @@ function App() {
         }
 
         const stateList = result.data || [];
+        if (!isSubscribed) return;
+
+        if (stateList.length === 0 && attempt < 3) {
+          // If server is still booting or seeding, retry in 3 seconds
+          setTimeout(() => {
+            if (isSubscribed) loadStates(attempt + 1);
+          }, 3000);
+          return;
+        }
+
         setStates(stateList);
+        setError("");
       } catch (err) {
-        console.error("States API Error:", err);
-        setError("Unable to load states. Please refresh the page.");
+        console.error(`States API Error (attempt ${attempt}):`, err);
+        if (attempt < 3 && isSubscribed) {
+          // Retry automatically to absorb cloud server wake-up lag
+          setTimeout(() => {
+            if (isSubscribed) loadStates(attempt + 1);
+          }, 3500);
+        } else if (isSubscribed) {
+          setError(err.message || "Unable to load states. The server might be waking up; please refresh.");
+        }
       } finally {
-        setLoadingStates(false);
+        if (isSubscribed) {
+          setLoadingStates(false);
+        }
       }
     };
 
     loadStates();
+    return () => {
+      isSubscribed = false;
+    };
   }, []);
 
   // =====================================================

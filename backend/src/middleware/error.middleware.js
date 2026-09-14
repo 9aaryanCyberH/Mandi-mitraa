@@ -49,7 +49,7 @@ export function errorHandler(err, req, res, next) {
     return errorResponse(res, msg, 400);
   }
 
-  const defaultMsg = process.env.NODE_ENV === "production" ? "Internal server error" : err.message;
+  const defaultMsg = err.message || "Internal server error";
   if (isLegacyRoute) {
     return res.status(500).json({ message: defaultMsg, data: [] });
   }
