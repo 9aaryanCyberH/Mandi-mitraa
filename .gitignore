@@ -1,18 +1,35 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+# Dependencies
+**/node_modules/
+node_modules/
 
-node_modules
-dist
-dist-ssr
+# Environment files and credentials (CRITICAL: Do not commit)
+**/.env
+**/.env.*
+!**/.env.example
+.env
+.env.*
+!.env.example
 *.local
 
-# Editor directories and files
+# Builds and production outputs
+**/dist/
+dist/
+**/dist-ssr/
+dist-ssr/
+
+# Test coverage
+**/coverage/
+coverage/
+
+# Logs
+**/logs/
+**/*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Agent & Editor directories
+.agents/
 .vscode/*
 !.vscode/extensions.json
 .idea

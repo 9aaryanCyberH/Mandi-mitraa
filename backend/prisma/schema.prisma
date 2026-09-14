@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model State {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  code      String?
+  districts District[]
+  mandis    Mandi[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([name])
+}
+
+model District {
+  id        Int      @id @default(autoincrement())
+  name      String
+  stateId   Int
+  state     State    @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  mandis    Mandi[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, stateId])
+  @@index([stateId])
+  @@index([name])
+}
+
+model Mandi {
+  id           Int           @id @default(autoincrement())
+  name         String
+  stateId      Int
+  state        State         @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  districtId   Int?
+  district     District?     @relation(fields: [districtId], references: [id], onDelete: SetNull)
+  marketPrices MarketPrice[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([name, stateId, districtId])
+  @@index([stateId])
+  @@index([districtId])
+  @@index([name])
+}
+
+model Commodity {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  code         String?
+  marketPrices MarketPrice[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([name])
+}
+
+model MarketPrice {
+  id              Int       @id @default(autoincrement())
+  mandiId         Int
+  mandi           Mandi     @relation(fields: [mandiId], references: [id], onDelete: Cascade)
+  commodityId     Int
+  commodity       Commodity @relation(fields: [commodityId], references: [id], onDelete: Cascade)
+  arrivalDate     DateTime
+  minPrice        Float
+  modalPrice      Float
+  maxPrice        Float
+  arrivalQuantity Float?
+  unit            String    @default("Quintal")
+  variety         String?
+  grade           String?
+  source          String    @default("AGMARK")
+  sourceRecordId  String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([mandiId, commodityId, arrivalDate])
+  @@index([mandiId])
+  @@index([commodityId])
+  @@index([arrivalDate])
+  @@index([commodityId, arrivalDate])
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  role      String   @default("USER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model IngestionLog {
+  id              Int      @id @default(autoincrement())
+  status          String
+  recordsFetched  Int      @default(0)
+  recordsInserted Int      @default(0)
+  recordsUpdated  Int      @default(0)
+  recordsRejected Int      @default(0)
+  durationMs      Int      @default(0)
+  error           String?
+  source          String   @default("AGMARK")
+  triggeredBy     String   @default("MANUAL")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([status])
+}

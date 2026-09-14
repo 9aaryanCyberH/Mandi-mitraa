@@ -1,284 +1,203 @@
-# 🌾 Mandi-Mitra
+# 🌾 Mandi-Mitra — Agricultural Marketing & Market Intelligence Platform
 
-A web-based agricultural market price platform that helps users check the latest available **mandi prices** for different commodities across Indian states.
-
-Mandi-Mitra provides a simple interface where users can select a state and commodity to view mandi-wise price information, including minimum, modal, and maximum prices.
-
-## 🚀 Live Demo
-
-**Frontend:**
-
-- Vercel: https://mandi-mitra-e75pgstn9-9aaryancyberhs-projects.vercel.app/
-- Netlify: https://mandi-mitra.netlify.app/
-
-**Backend API:**
-
-https://enaam-web-scraping.onrender.com/
-
-## ✨ Features
-
-- 🌾 Search mandi prices by state and commodity
-- 🏪 View prices across different APMCs/mandis
-- 📍 Display district information
-- 💰 Minimum, modal, and maximum price information
-- 📅 Display arrival dates
-- 📊 Price summary and analysis
-- 🔄 Dynamic state and commodity selection
-- 📱 Responsive user interface
-- ⚡ REST API powered backend
-- 🗃️ JSON-based mandi price dataset
-- 🌐 Deployed frontend and backend
-
-## 🛠️ Tech Stack
-
-### Frontend
-
-- React.js
-- Vite
-- JavaScript
-- CSS
-
-### Backend
-
-- Node.js
-- Express.js
-- REST API
-- Puppeteer
-- CORS
-
-### Data Source
-
-- Government of India Open Government Data Platform
-- e-NAM mandi price data
-
-### Deployment
-
-- Vercel — Frontend
-- Render — Backend
-
-## 🏗️ Project Architecture
-
-```text
-                 ┌──────────────────────┐
-                 │      User / Farmer   │
-                 └──────────┬───────────┘
-                            │
-                            ▼
-                 ┌──────────────────────┐
-                 │   Mandi-Mitra UI     │
-                 │      React + Vite    │
-                 └──────────┬───────────┘
-                            │
-                       REST API
-                            │
-                            ▼
-                 ┌──────────────────────┐
-                 │    Express Backend   │
-                 │      Node.js         │
-                 └──────────┬───────────┘
-                            │
-                            ▼
-                 ┌──────────────────────┐
-                 │  Mandi Price Data    │
-                 │       JSON           │
-                 └──────────────────────┘
-```
-
-## 🔄 How It Works
-
-1. The user opens the Mandi-Mitra web application.
-2. The application loads the available states from the backend API.
-3. The user selects a state.
-4. The application retrieves the commodities available for that state.
-5. The user selects a commodity.
-6. A request is sent to the backend.
-7. The backend searches the mandi price dataset.
-8. Matching mandi records are returned to the frontend.
-9. The frontend displays the results in a structured table.
-10. Price statistics are calculated and displayed for easier comparison.
-
-## 📊 Price Information
-
-For each mandi, Mandi-Mitra can display:
-
-| Field | Description |
-|---|---|
-| Mandi / APMC | Name of the agricultural market |
-| District | District where the mandi is located |
-| Commodity | Name of the agricultural commodity |
-| Minimum Price | Lowest recorded price |
-| Modal Price | Most commonly reported price |
-| Maximum Price | Highest recorded price |
-| Arrival Date | Date of arrival/reporting |
-
-## 📁 Project Structure
-
-```text
-Mandi-Mitra/
-│
-├── public/
-│
-├── src/
-│   ├── App.jsx
-│   ├── App.css
-│   ├── index.css
-│   └── main.jsx
-│
-├── package.json
-├── package-lock.json
-├── vite.config.js
-└── README.md
-```
-
-## 🔌 Backend API
-
-The frontend communicates with the following backend:
-
-```text
-https://enaam-web-scraping.onrender.com
-```
-
-### Available Endpoints
-
-#### Get available states
-
-```http
-GET /states
-```
-
-Example:
-
-```text
-https://enaam-web-scraping.onrender.com/states
-```
-
-#### Get commodities for a state
-
-```http
-GET /commodities?state=Punjab
-```
-
-Example:
-
-```text
-https://enaam-web-scraping.onrender.com/commodities?state=Punjab
-```
-
-#### Get mandi price data
-
-```http
-POST /getdata
-```
-
-Request body:
-
-```json
-{
-  "state": "Punjab",
-  "commodity": "Apple"
-}
-```
-
-## 💻 Run Locally
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/9aaryanCyberH/Mandi-mitra.git
-```
-
-### 2. Move into the project directory
-
-```bash
-cd Mandi-mitra
-```
-
-### 3. Install dependencies
-
-```bash
-npm install
-```
-
-### 4. Start the development server
-
-```bash
-npm run dev
-```
-
-The application will be available at:
-
-```text
-http://localhost:5173
-```
-
-## 📦 Production Build
-
-To create a production build:
-
-```bash
-npm run build
-```
-
-To preview the production build locally:
-
-```bash
-npm run preview
-```
-
-## 🔐 Environment & Security
-
-Sensitive API credentials should never be committed to GitHub.
-
-If API credentials are required during development, store them in a `.env` file:
-
-```env
-DATA_GOV_API_KEY=your_api_key_here
-```
-
-Make sure `.env` is included in `.gitignore`.
-
-Never expose API keys directly inside frontend code or public repositories.
-
-## 🎯 Project Objective
-
-The main objective of Mandi-Mitra is to make agricultural market price information easier to access and understand.
-
-Instead of manually searching through large datasets, users can select their state and commodity and quickly compare available mandi prices.
-
-## 🔮 Future Improvements
-
-- 📈 Historical price charts
-- 📍 Location-based mandi recommendations
-- 🔔 Price alerts and notifications
-- 📊 Advanced price analytics
-- 🗺️ Interactive mandi map
-- 🤖 AI-based price trend predictions
-- 📱 Progressive Web App support
-- 🌐 Support for regional languages
-- 🗄️ Migration from JSON storage to a database
-- ⏱️ Automated data updates
-
-## 👨‍💻 Developer
-
-**Aaryan Kumar**
-
-Computer Science Engineering Student
-
-### Links
-
-- LinkedIn:  
-  https://www.linkedin.com/in/aaryan-k-ba3985246/
-
-- GitHub:  
-  https://github.com/9aaryanCyberH
-
-- Resume:  
-  https://drive.google.com/file/d/1BrrYb8FwXAVyU6mplO27FitPqQi9Lv7F/view
-
-## 📜 License
-
-This project is developed for educational and project-based purposes.
+> **Official AGMARK Agricultural Market Intelligence, Real-Time Commodity Price Discovery & Mandi Arbitrage Platform for India.**
 
 ---
 
-⭐ If you find this project useful, consider giving the repository a star!
+## 🌐 Live Demonstrations
+
+- **Frontend Application (Vercel)**: [https://mandi-mitra-e75pgstn9-9aaryancyberhs-projects.vercel.app/](https://mandi-mitra-e75pgstn9-9aaryancyberhs-projects.vercel.app/)
+- **Live Local Preview**: [http://localhost:5173](http://localhost:5173)
+- **Official AGMARK Data Integration**: Real-time government mandi records via Data.gov.in API
+
+---
+
+## 🏛️ Project Overview
+
+**Mandi-Mitra** is an agricultural marketing platform designed for Indian farmers, FPOs (Farmer Producer Organisations), agribusinesses, and commodity traders. It transforms raw agricultural market data into actionable price discovery, market surveillance, and spatial profit arbitrage intelligence.
+
+The platform interfaces with the official Indian Government Open Data (AGMARK daily market prices dataset) across **36 States and Union Territories**, tracking over **42 core commodities** and hundreds of APMC mandis.
+
+---
+
+## 📁 Repository Structure
+
+The project is organized into two primary, decoupled category workspaces:
+
+```
+Mandi-mitra/
+├── frontend/                     # React 19 + Vite + Chart.js Client Application
+│   ├── public/assets/            # High-resolution photographic & visual assets
+│   ├── src/
+│   │   ├── components/
+│   │   │   └── AnalyticsDashboard.jsx  # Multi-mode analytics (Crop & APMC deep-dives)
+│   │   ├── App.css               # Figma-inspired design system & styling
+│   │   ├── App.jsx               # Hero, Price Discovery Search, Marketing Cards, & Arbitrage Simulator
+│   │   └── main.jsx
+│   ├── index.html
+│   ├── vite.config.js
+│   ├── package.json
+│   ├── .env.example
+│   └── README.md
+│
+├── backend/                      # Node.js + Express + Prisma + PostgreSQL Service
+│   ├── prisma/
+│   │   ├── schema.prisma         # Normalized database models (PriceRecord, Commodity, Market, State, User)
+│   │   └── migrations/           # Versioned SQL migrations
+│   ├── scripts/
+│   │   ├── ingest.js             # Automated & manual AGMARK data ingestion
+│   │   ├── seed.js               # Initial benchmark commodity & APMC seeding
+│   │   └── test-connection.js
+│   ├── src/
+│   │   ├── controllers/          # Request handlers (prices, analytics, compatibility, auth)
+│   │   ├── routes/               # Modular Express routing (v1 & legacy endpoints)
+│   │   ├── services/             # Business logic & external AGMARK API integrations
+│   │   ├── app.js                # Express app setup, CORS, rate-limiting & logging
+│   │   └── server.js             # HTTP server & cron scheduler entry point
+│   ├── tests/                    # 24 unit & integration tests (Vitest)
+│   ├── package.json
+│   ├── .env.example
+│   └── README.md
+│
+├── .gitignore                    # Global ignore rules (strictly ignores .env and builds)
+├── package.json                  # Root monorepo runner
+└── README.md                     # Root architecture documentation
+```
+
+---
+
+## 🚀 Quick Start
+
+### 1. Prerequisites
+- **Node.js**: v18+ (v20+ recommended)
+- **PostgreSQL**: v14+ (running on port `5432`)
+- **npm** or **pnpm**
+
+---
+
+### 2. Installation
+
+Install dependencies for all workspaces from the project root:
+
+```bash
+# Install frontend dependencies
+npm install --prefix frontend
+
+# Install backend dependencies
+npm install --prefix backend
+```
+
+---
+
+### 3. Environment Configuration
+
+#### Backend Configuration
+Create `backend/.env` based on `backend/.env.example`:
+
+```env
+PORT=5000
+NODE_ENV=development
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/mandi_mitra?schema=public"
+JWT_SECRET="your-secure-jwt-secret-key-at-least-32-characters"
+JWT_EXPIRES_IN="7d"
+AGMARK_API_KEY="579b464db66ec23bdd0000013646f021748b4dac7e0fc075e67376eb"
+AGMARK_RESOURCE_ID="9ef84268-d588-465a-a308-a864a43d0070"
+INGESTION_CRON="0 */6 * * *"
+```
+
+#### Frontend Configuration
+Create `frontend/.env` based on `frontend/.env.example`:
+
+```env
+VITE_API_BASE_URL=http://localhost:5000
+```
+
+---
+
+### 4. Database Setup & Ingestion (Backend)
+
+Run Prisma migrations and initial seed from the root or `backend/` folder:
+
+```bash
+# Navigate to backend
+cd backend
+
+# Run database migrations
+npx prisma migrate dev
+
+# Seed reference commodities and initial benchmark data
+npm run db:seed
+
+# (Optional) Run full live AGMARK API sync
+npm run ingest:live
+```
+
+---
+
+### 5. Running the Application
+
+From the root directory, run both servers:
+
+```bash
+# Start Frontend (http://localhost:5173)
+npm run dev:frontend
+
+# Start Backend (http://localhost:5000)
+npm run dev:backend
+```
+
+Or start both concurrently in separate terminal tabs.
+
+---
+
+## 🧪 Testing & Validation
+
+Run the automated test suite:
+
+```bash
+# Run 24 unit & integration tests for backend
+npm test
+
+# Build the frontend client for production
+npm run build
+```
+
+---
+
+## 🌟 Core Features
+
+1. **Real-Time Price Discovery Search**:
+   - Filter live AGMARK mandi data by State, Commodity, and Arrival Date.
+   - Highlights Best APMC to sell (highest net realization), Lowest Procurement Floor, and spatial price spreads.
+
+2. **Marketing Precision & Crop Surveillance**:
+   - Precision pricing intelligence to identify peak modal premiums.
+   - Real-time arrival volume tracking and demand-supply surveillance.
+
+3. **Interactive Mandi Arbitrage Calculator**:
+   - Dynamic simulation comparing local mandi rates to highest-paying regional APMCs.
+   - Real-time estimated gross profit gain calculation.
+
+4. **Multi-Mode Analytics Dashboard**:
+   - **Crop Mode**: Multi-day historical price trajectories, 7-day to 1-year presets, custom date pickers, and inter-mandi profitability comparisons.
+   - **APMC Mode**: Mandi trade volume, market benchmarks, and comparative commodity basket analysis.
+
+5. **Automated Background Ingestion**:
+   - Scheduled cron jobs automatically ingest and normalize daily price updates from the official AGMARK data feed.
+
+---
+
+## 👨‍💻 Developer & Contact
+
+**Aaryan Kumar** — *Computer Science & Data Analytics*
+
+- **LinkedIn**: [https://www.linkedin.com/in/aaryan-k-ba3985246/](https://www.linkedin.com/in/aaryan-k-ba3985246/)
+- **GitHub**: [https://github.com/9aaryanCyberH](https://github.com/9aaryanCyberH)
+- **Resume**: [View Online](https://drive.google.com/file/d/1BrrYb8FwXAVyU6mplO27FitPqQi9Lv7F/view)
+
+---
+
+## 🛡️ License
+
+This project is built and maintained by **Aaryan Kumar**.  
+Licensed under the [MIT License](LICENSE).
