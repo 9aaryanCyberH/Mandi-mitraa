@@ -22,7 +22,7 @@ async function startServer() {
       initMandiUpdateJob();
     }
 
-    const server = app.listen(PORT, () => {
+    const server = app.listen(PORT, "0.0.0.0", () => {
       logger.info(`🌾 Mandi-Mitra Backend is running on port ${PORT} [${env.NODE_ENV}]`);
       logger.info(`📡 Health check available at: http://localhost:${PORT}/health`);
       logger.info(`🌾 Compatibility endpoints: http://localhost:${PORT}/states`);
