@@ -660,7 +660,11 @@ function App() {
                       <label>STATE / REGION</label>
                       <select
                         value={state}
-                        onChange={(e) => setState(e.target.value)}
+                        onChange={(e) => {
+                          const newState = e.target.value;
+                          setState(newState);
+                          setCommodity("");
+                        }}
                         disabled={loadingStates}
                       >
                         <option value="">
@@ -719,16 +723,47 @@ function App() {
                     </div>
 
                     {/* SUBMIT BUTTON */}
-                    <button
-                      type="submit"
-                      className="hero-search-btn"
-                      disabled={loading || !state || !commodity}
-                    >
-                      {loading ? "Analyzing..." : "🔍 Search Rates"}
-                    </button>
+                    <div className="search-field search-btn-field">
+                      <span className="search-btn-spacer" aria-hidden="true">&nbsp;</span>
+                      <button
+                        type="submit"
+                        className="hero-search-btn"
+                        disabled={loading || !state || !commodity}
+                        id="hero-mandi-search-btn"
+                      >
+                        {loading ? "Analyzing..." : "🔍 Search Rates"}
+                      </button>
+                    </div>
                   </form>
 
-                  {error && <div className="error-message">{error}</div>}
+                  {error && (
+                    <div className="search-status-alert">
+                      <div className="status-alert-content">
+                        <span className="status-alert-icon">ℹ️</span>
+                        <div>
+                          <p className="status-alert-title">{error}</p>
+                          {commodities && commodities.length > 0 && (
+                            <div className="status-suggestions">
+                              <span>Available in {state}:</span>
+                              {commodities.slice(0, 5).map((crop) => (
+                                <button
+                                  key={crop}
+                                  type="button"
+                                  className="crop-suggestion-pill"
+                                  onClick={() => {
+                                    setCommodity(crop);
+                                    fetchMandiData(state, crop, selectedDate, true);
+                                  }}
+                                >
+                                  {crop}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
