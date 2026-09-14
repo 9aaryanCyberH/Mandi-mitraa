@@ -34,7 +34,7 @@ router.get("/", (req, res) => {
         mandis: "/api/v1/mandis"
       }
     },
-    documentation: "https://github.com/9aaryanCyberH/Mandi-mitra"
+    documentation: "https://github.com/9aaryanCyberH/Mandi-mitraa"
   });
 });
 
