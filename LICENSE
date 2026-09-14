@@ -1,0 +1,20 @@
+Educational and Academic Project License
+
+Project: Mandi-Mitra — Agricultural Marketing & Market Intelligence Platform
+Developer: Aaryan Kumar
+Year: 2026
+
+1. Educational & Non-Commercial Purpose
+This project is created and made available strictly for educational, academic, learning, and research demonstration purposes. It demonstrates agricultural market intelligence, real-time price discovery, and multi-mandi analytics using publicly accessible Indian Government Open Data (AGMARK via data.gov.in).
+
+2. Scope of Permitted Use
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to inspect, run, study, review, and evaluate the Software for non-commercial educational and academic purposes, subject to the following conditions:
+
+- The above copyright notice and this educational permission notice shall be retained in all copies or substantial portions of the Software.
+- The project and its engineering architecture shall be properly attributed to the developer (Aaryan Kumar).
+
+3. Data & Third-Party Attribution
+All agricultural market returns, commodity names, arrival dates, and mandi benchmark records referenced in this system originate from official Indian Open Government Data initiatives (AGMARK / data.gov.in) and remain subject to the respective National Data Sharing and Accessibility Policy (NDSAP) guidelines.
+
+4. Disclaimer of Warranty & Liability
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

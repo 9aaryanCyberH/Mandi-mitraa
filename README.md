@@ -197,7 +197,9 @@ npm run build
 
 ---
 
-## 🛡️ License
+## 📜 License & Educational Project Notice
 
-This project is built and maintained by **Aaryan Kumar**.  
-Licensed under the [MIT License](LICENSE).
+This project is created and maintained by **Aaryan Kumar** as an **educational and academic engineering project**.
+
+It is licensed under the [Educational and Academic Project License](LICENSE). Permission is granted to inspect, run, study, review, and evaluate this software for non-commercial educational purposes with proper attribution to the author. Market data records are utilized for educational demonstration under official open government data policies (AGMARK / data.gov.in).
+

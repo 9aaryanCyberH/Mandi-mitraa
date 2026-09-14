@@ -1479,15 +1479,14 @@ function App() {
 
               <div className="footer-bottom-row">
                 <p>
-                  © 2026 Mandi-Mitra · Built & Developed by Aaryan Kumar. All
-                  rights reserved.
+                  © 2026 Mandi-Mitra · Built & Developed by Aaryan Kumar. Educational & Academic Project.
                 </p>
                 <div className="footer-legal-links">
-                  <span>Privacy Policy</span>
+                  <span>Educational Use License</span>
                   <span>•</span>
                   <span>Terms of Service</span>
                   <span>•</span>
-                  <span>AGMARK Data Disclaimer</span>
+                  <span>AGMARK Open Data Disclaimer</span>
                 </div>
               </div>
             </div>
