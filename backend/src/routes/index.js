@@ -10,6 +10,34 @@ import { checkDatabaseConnection } from "../config/database.js";
 
 const router = Router();
 
+// Root API Welcome & Endpoint Directory
+router.get("/", (req, res) => {
+  return res.status(200).json({
+    success: true,
+    name: "Mandi-Mitra API",
+    version: "1.0.0",
+    status: "online",
+    description:
+      "Official AGMARK agricultural market intelligence and real-time price discovery API for India.",
+    endpoints: {
+      health: "/health",
+      states: "/states",
+      commodities: "/commodities?state={state}",
+      price_discovery: "POST /getdata",
+      api_v1: {
+        prices: "/api/v1/prices",
+        analytics: "/api/v1/prices/analytics?state={state}&commodity={commodity}",
+        history: "/api/v1/prices/history?state={state}&commodity={commodity}&days={days}",
+        compare: "/api/v1/prices/compare?state={state}&commodity={commodity}",
+        states: "/api/v1/states",
+        commodities: "/api/v1/commodities",
+        mandis: "/api/v1/mandis"
+      }
+    },
+    documentation: "https://github.com/9aaryanCyberH/Mandi-mitra"
+  });
+});
+
 // Health Check Endpoint (Section 21)
 router.get("/health", async (req, res) => {
   const isDbConnected = await checkDatabaseConnection();
