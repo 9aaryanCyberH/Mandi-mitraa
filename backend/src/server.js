@@ -16,16 +16,17 @@ async function startServer() {
     } else {
       logger.info("✅ PostgreSQL database connected successfully.");
 
-      // Ensure database schema and initial data are fully initialized
+      // Ensure database schema and all 36 States & UTs with benchmark data are fully initialized
       try {
         const stateCount = await prisma.state.count();
-        if (stateCount === 0) {
-          logger.info("States table is empty. Running initial database seed...");
+        const priceCount = await prisma.marketPrice.count();
+        if (stateCount < 36 || priceCount < 1000) {
+          logger.info(`Database has ${stateCount} states and ${priceCount} prices (expected 36 states). Running complete Pan-India seed...`);
           const { seed } = await import("../scripts/seed.js");
           await seed();
-          logger.info("✅ Database seeded successfully.");
+          logger.info("✅ Database seeded successfully for all 36 States & UTs.");
         } else {
-          logger.info(`✅ Database verified: ${stateCount} states registered.`);
+          logger.info(`✅ Database verified: ${stateCount} States/UTs and ${priceCount} market prices registered.`);
         }
       } catch (tableErr) {
         logger.warn(`⚠️ Application tables missing or uninitialized (${tableErr.message}). Synchronizing schema via Prisma...`);
@@ -34,7 +35,7 @@ async function startServer() {
           execSync("npx prisma db push --accept-data-loss", { stdio: "inherit" });
           const { seed } = await import("../scripts/seed.js");
           await seed();
-          logger.info("✅ Database schema synchronized and seeded successfully.");
+          logger.info("✅ Database schema synchronized and seeded successfully for all 36 States & UTs.");
         } catch (syncErr) {
           logger.error("❌ Database schema push or seeding failed:", syncErr);
         }
