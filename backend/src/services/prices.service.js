@@ -117,10 +117,13 @@ export class PricesService {
     }
 
     if (newRecords.length > 0) {
-      await prisma.marketPrice.createMany({
-        data: newRecords,
-        skipDuplicates: true
-      });
+      const BATCH = 500;
+      for (let b = 0; b < newRecords.length; b += BATCH) {
+        await prisma.marketPrice.createMany({
+          data: newRecords.slice(b, b + BATCH),
+          skipDuplicates: true
+        });
+      }
     }
 
     const queryWhere = {
@@ -133,7 +136,7 @@ export class PricesService {
       queryWhere.arrivalDate = { gte: startOfDay, lte: endOfDay };
     }
 
-    return prisma.marketPrice.findMany({
+    let results = await prisma.marketPrice.findMany({
       where: queryWhere,
       orderBy: { arrivalDate: "desc" },
       include: {
@@ -143,6 +146,38 @@ export class PricesService {
         commodity: true
       }
     });
+
+    // If exact date produced no records (e.g. market holiday), fall back to nearest trading date
+    if (results.length === 0 && requestedDate) {
+      const nearest = await prisma.marketPrice.findFirst({
+        where: {
+          mandiId: { in: mandis.map((m) => m.id) },
+          commodityId: commodity.id
+        },
+        orderBy: { arrivalDate: "desc" },
+        select: { arrivalDate: true }
+      });
+      if (nearest?.arrivalDate) {
+        const startOfDay = new Date(Date.UTC(nearest.arrivalDate.getUTCFullYear(), nearest.arrivalDate.getUTCMonth(), nearest.arrivalDate.getUTCDate(), 0, 0, 0));
+        const endOfDay = new Date(Date.UTC(nearest.arrivalDate.getUTCFullYear(), nearest.arrivalDate.getUTCMonth(), nearest.arrivalDate.getUTCDate(), 23, 59, 59));
+        results = await prisma.marketPrice.findMany({
+          where: {
+            mandiId: { in: mandis.map((m) => m.id) },
+            commodityId: commodity.id,
+            arrivalDate: { gte: startOfDay, lte: endOfDay }
+          },
+          orderBy: { arrivalDate: "desc" },
+          include: {
+            mandi: {
+              include: { district: true, state: true }
+            },
+            commodity: true
+          }
+        });
+      }
+    }
+
+    return results;
   }
 
   /**

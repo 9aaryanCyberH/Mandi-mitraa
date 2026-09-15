@@ -15,8 +15,9 @@ router.get("/", (req, res) => {
   return res.status(200).json({
     success: true,
     name: "Mandi-Mitra API",
-    version: "1.0.0",
+    version: "1.2.0",
     status: "online",
+    capabilities: ["all_36_states_and_uts", "all_commodities_discovery", "365_day_history", "instant_nearest_session_fallback"],
     description:
       "Official AGMARK agricultural market intelligence and real-time price discovery API for India.",
     endpoints: {

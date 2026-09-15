@@ -521,10 +521,14 @@ export async function seed() {
   }
 
   if (priceRecords.length > 0) {
-    await prisma.marketPrice.createMany({
-      data: priceRecords,
-      skipDuplicates: true
-    });
+    const BATCH_SIZE = 5000;
+    for (let i = 0; i < priceRecords.length; i += BATCH_SIZE) {
+      const chunk = priceRecords.slice(i, i + BATCH_SIZE);
+      await prisma.marketPrice.createMany({
+        data: chunk,
+        skipDuplicates: true
+      });
+    }
     console.log(`✅ Seeded ${priceRecords.length} 1-year historical market price records across all 36 States & UTs.`);
   }
 
