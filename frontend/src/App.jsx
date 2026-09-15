@@ -95,6 +95,9 @@ function App() {
   const [selectedDate, setSelectedDate] = useState("");
   const [todayOnly, setTodayOnly] = useState(true);
 
+  const todayIso = new Date().toISOString().split("T")[0];
+  const oneYearAgoIso = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
   const [states, setStates] = useState([]);
   const [commodities, setCommodities] = useState([]);
 
@@ -731,13 +734,15 @@ function App() {
                       </select>
                     </div>
 
-                    {/* DATE (OPTIONAL) */}
+                    {/* DATE (OPTIONAL - UP TO 1 YEAR) */}
                     <div className="search-field">
-                      <label>MARKET DATE (OPTIONAL)</label>
+                      <label>MARKET DATE (UP TO 1 YEAR)</label>
                       <div className="date-field-wrap">
                         <input
                           type="date"
                           value={selectedDate}
+                          min={oneYearAgoIso}
+                          max={todayIso}
                           onChange={(e) => {
                             const val = e.target.value;
                             setSelectedDate(val);
@@ -750,7 +755,7 @@ function App() {
                           <button
                             type="button"
                             className="clear-date-btn"
-                            title="Reset to today"
+                            title="Reset to today's current prices"
                             onClick={() => {
                               setSelectedDate("");
                               if (state && commodity) {
@@ -892,7 +897,7 @@ function App() {
                           type="button"
                           className="filter-toggle-btn active"
                         >
-                          📅 Date: {latestArrivalDate} ({displayResults.length} mandis)
+                          📅 Selected Date: {latestArrivalDate} ({displayResults.length} mandis)
                         </button>
                         <button
                           type="button"
@@ -904,7 +909,7 @@ function App() {
                             }
                           }}
                         >
-                          ⚡ Today's Live Rates
+                          ⚡ Switch to Current Prices
                         </button>
                       </>
                     ) : (
@@ -914,14 +919,14 @@ function App() {
                           className={`filter-toggle-btn ${todayOnly ? "active" : ""}`}
                           onClick={() => setTodayOnly(true)}
                         >
-                          ⚡ Today's Live Rates ({latestArrivalDate})
+                          ⚡ Current Prices ({latestArrivalDate})
                         </button>
                         <button
                           type="button"
                           className={`filter-toggle-btn ${!todayOnly ? "active" : ""}`}
                           onClick={() => setTodayOnly(false)}
                         >
-                          📅 1-Year History ({results.length})
+                          📅 1-Year History ({results.length} Records)
                         </button>
                       </>
                     )}

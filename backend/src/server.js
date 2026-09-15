@@ -20,11 +20,11 @@ async function startServer() {
       try {
         const stateCount = await prisma.state.count();
         const priceCount = await prisma.marketPrice.count();
-        if (stateCount < 36 || priceCount < 1000) {
-          logger.info(`Database has ${stateCount} states and ${priceCount} prices (expected 36 states). Running complete Pan-India seed...`);
+        if (stateCount < 36 || priceCount < 25000) {
+          logger.info(`Database has ${stateCount} states and ${priceCount} prices (expected 36 states, 1-year history). Running complete Pan-India seed...`);
           const { seed } = await import("../scripts/seed.js");
           await seed();
-          logger.info("✅ Database seeded successfully for all 36 States & UTs.");
+          logger.info("✅ Database seeded successfully for all 36 States & UTs with 1-year history.");
         } else {
           logger.info(`✅ Database verified: ${stateCount} States/UTs and ${priceCount} market prices registered.`);
         }
