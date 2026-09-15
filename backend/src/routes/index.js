@@ -50,6 +50,28 @@ router.get("/health", async (req, res) => {
   });
 });
 
+// Manual/On-demand Pan-India Seed Trigger
+router.get("/seed", async (req, res) => {
+  try {
+    const { seed } = await import("../../scripts/seed.js");
+    await seed();
+    const { prisma } = await import("../config/database.js");
+    const states = await prisma.state.count();
+    const prices = await prisma.marketPrice.count();
+    return res.status(200).json({
+      success: true,
+      message: "Pan-India database seeded successfully for all 36 States & UTs",
+      states,
+      prices
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      error: err.message
+    });
+  }
+});
+
 // Legacy frontend compatibility endpoints at root level
 router.use("/", legacyRoutes);
 
